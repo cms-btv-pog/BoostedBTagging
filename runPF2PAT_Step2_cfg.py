@@ -286,6 +286,24 @@ addJetCollection(
 )
 
 #-------------------------------------
+## Establish references between PATified fat jets and subjets using the BoostedJetMerger
+process.selectedPatJetsCA8FilteredPFPacked = cms.EDProducer("BoostedJetMerger",
+    jetSrc=cms.InputTag("selectedPatJetsCA8FilteredPF"),
+    subjetSrc=cms.InputTag("selectedPatJetsCA8FilteredSubjetsPF")
+)
+
+process.selectedPatJetsCA8PrunedPFPacked = cms.EDProducer("BoostedJetMerger",
+    jetSrc=cms.InputTag("selectedPatJetsCA8PrunedPF"),
+    subjetSrc=cms.InputTag("selectedPatJetsCA8PrunedSubjetsPF")
+)
+
+## Define BoostedJetMerger sequence
+process.jetMergerSeq = cms.Sequence(
+    process.selectedPatJetsCA8FilteredPFPacked
+    + process.selectedPatJetsCA8PrunedPFPacked
+)
+
+#-------------------------------------
 from PhysicsTools.PatAlgos.tools.coreTools import *
 ## Keep only jets in the default sequence
 removeAllPATObjectsBut(process, ['Jets'])
@@ -326,12 +344,12 @@ process.primaryVertexFilter = cms.EDFilter('VertexSelector',
 
 #-------------------------------------
 ## If using explicit jet-track association
-#if options.useExplicitJTA:
-    #from RecoJets.JetAssociationProducers.ak5JTA_cff import ak5JetTracksAssociatorExplicit
-    #for m in getattr(process,"patDefaultSequence").moduleNames():
-        #if m.startswith('jetTracksAssociatorAtVertex'):
-            #print 'Switching ' + m + ' to explicit jet-track association'
-            #setattr( process, m, ak5JetTracksAssociatorExplicit.clone(jets = getattr(getattr(process,m),'jets')) )
+if options.useExplicitJTA:
+    from RecoJets.JetAssociationProducers.ak5JTA_cff import ak5JetTracksAssociatorExplicit
+    for m in getattr(process,"patDefaultSequence").moduleNames():
+        if m.startswith('jetTracksAssociatorAtVertex'):
+            print 'Switching ' + m + ' to explicit jet-track association'
+            setattr( process, m, ak5JetTracksAssociatorExplicit.clone(jets = getattr(getattr(process,m),'jets')) )
 
 #-------------------------------------
 ## Remove tau stuff that really shouldn't be there (probably a bug in PAT)
@@ -362,6 +380,7 @@ process.p = cms.Path(
     process.primaryVertexFilter
     * process.goodOfflinePrimaryVertices
     * ( process.jetSeq * process.patDefaultSequence )
+    * process.jetMergerSeq
     #* (
     #process.myAnalyzer
     #+ process.myNtupleMaker
