@@ -286,6 +286,39 @@ addJetCollection(
 )
 
 #-------------------------------------
+## New jet flavor still requires some cfg-level adjustments until it is better integrated into PAT
+## Adjust the jet flavor for CA8 jets
+process.patJetPartonAssociation = process.patJetPartonAssociation.clone(
+    jets = cms.InputTag("ca8PFJets"),
+    rParam = cms.double(0.8),
+    jetAlgorithm = cms.string('CambridgeAachen'),
+)
+## Adjust the jet flavor for CA8 filtered subjets
+process.patJetPartonAssociationCA8FilteredSubjetsPF = process.patJetPartonAssociationCA8FilteredSubjetsPF.clone(
+    jets = cms.InputTag("ca8PFJets"),
+    groomedJets = cms.InputTag("ca8PFJetsFiltered"),
+    subjets = cms.InputTag("ca8PFJetsFiltered", "SubJets"),
+    rParam = cms.double(0.8),
+    jetAlgorithm = cms.string('CambridgeAachen'),
+)
+process.patJetsCA8FilteredSubjetsPF.JetPartonMapSource = cms.InputTag("patJetPartonAssociationCA8FilteredSubjetsPF","SubJets")
+## Remove the jet flavor for CA8 filtered jets
+process.patJetsCA8FilteredPF.getJetMCFlavour = cms.bool(False)
+process.patDefaultSequence.remove(process.patJetPartonAssociationCA8FilteredPF)
+## Adjust the jet flavor for CA8 pruned subjets
+process.patJetPartonAssociationCA8PrunedSubjetsPF = process.patJetPartonAssociationCA8PrunedSubjetsPF.clone(
+    jets = cms.InputTag("ca8PFJets"),
+    groomedJets = cms.InputTag("ca8PFJetsPruned"),
+    subjets = cms.InputTag("ca8PFJetsPruned", "SubJets"),
+    rParam = cms.double(0.8),
+    jetAlgorithm = cms.string('CambridgeAachen'),
+)
+process.patJetsCA8PrunedSubjetsPF.JetPartonMapSource = cms.InputTag("patJetPartonAssociationCA8PrunedSubjetsPF","SubJets")
+## Remove the jet flavor for CA8 pruned jets
+process.patJetsCA8PrunedPF.getJetMCFlavour = cms.bool(False)
+process.patDefaultSequence.remove(process.patJetPartonAssociationCA8PrunedPF)
+
+#-------------------------------------
 ## Establish references between PATified fat jets and subjets using the BoostedJetMerger
 process.selectedPatJetsCA8FilteredPFPacked = cms.EDProducer("BoostedJetMerger",
     jetSrc=cms.InputTag("selectedPatJetsCA8FilteredPF"),
