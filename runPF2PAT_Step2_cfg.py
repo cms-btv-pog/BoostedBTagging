@@ -186,6 +186,33 @@ process.ca8PFJetsCHSFiltered = ak5PFJetsFiltered.clone(
     jetCollInstanceName=cms.string("SubJets"),
     jetPtMin = cms.double(20.)
 )
+## CA8 BDRS filtered jets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
+## Compared to the above filtered jets, here dynamic filtering radius is used (as in arXiv:0802.2470)
+from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
+process.ca8GenJetsNoNuBDRSFiltered = ca4GenJets.clone(
+    rParam = cms.double(0.8),
+    src = cms.InputTag("genParticlesForJetsNoNu"),
+    useFiltering = cms.bool(True),
+    useDynamicFiltering = cms.bool(True),
+    nFilt = cms.int32(3),
+    rFilt = cms.double(0.3),
+    rFiltFactor = cms.double(0.5),
+    writeCompound = cms.bool(True),
+    jetCollInstanceName=cms.string("SubJets")
+)
+from RecoJets.JetProducers.ak5PFJetsFiltered_cfi import ak5PFJetsFiltered
+process.ca8PFJetsCHSBDRSFiltered = ak5PFJetsFiltered.clone(
+    jetAlgorithm = cms.string("CambridgeAachen"),
+    rParam = cms.double(0.8),
+    src = process.ca8PFJetsCHS.src,
+    srcPVs = process.ca8PFJetsCHS.srcPVs,
+    doAreaFastjet = process.ca8PFJetsCHS.doAreaFastjet,
+    writeCompound = cms.bool(True),
+    jetCollInstanceName=cms.string("SubJets"),
+    jetPtMin = cms.double(20.),
+    useDynamicFiltering = cms.bool(True),
+    rFiltFactor = cms.double(0.5)
+)
 ## CA8 pruned jets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
 from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
 process.ca8GenJetsNoNuPruned = ca4GenJets.clone(
@@ -206,6 +233,35 @@ process.ca8PFJetsCHSPruned = ak5PFJetsPruned.clone(
     writeCompound = cms.bool(True),
     jetCollInstanceName=cms.string("SubJets"),
     jetPtMin = cms.double(20.)
+)
+## CA8 jets with Kt subjets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
+## Kt subjets produced using Kt-based pruning with very loose pruning cuts (pruning is effectively disabled)
+from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
+process.ca8GenJetsNoNuKtSubjets = ca4GenJets.clone(
+    SubJetParameters.clone(
+        zcut = cms.double(0.),
+        rcut_factor = cms.double(9999.)
+    ),
+    rParam = cms.double(0.8),
+    src = cms.InputTag("genParticlesForJetsNoNu"),
+    usePruning = cms.bool(True),
+    useKtPruning = cms.bool(True),
+    writeCompound = cms.bool(True),
+    jetCollInstanceName=cms.string("SubJets")
+)
+from RecoJets.JetProducers.ak5PFJetsPruned_cfi import ak5PFJetsPruned
+process.ca8PFJetsCHSKtSubjets = ak5PFJetsPruned.clone(
+    jetAlgorithm = cms.string("CambridgeAachen"),
+    rParam = cms.double(0.8),
+    src = process.ca8PFJetsCHS.src,
+    srcPVs = process.ca8PFJetsCHS.srcPVs,
+    doAreaFastjet = process.ca8PFJetsCHS.doAreaFastjet,
+    writeCompound = cms.bool(True),
+    jetCollInstanceName=cms.string("SubJets"),
+    jetPtMin = cms.double(20.),
+    useKtPruning = cms.bool(True),
+    zcut = cms.double(0.),
+    rcut_factor = cms.double(9999.)
 )
 
 #-------------------------------------
@@ -432,13 +488,17 @@ for m in getattr(process,"patDefaultSequence").moduleNames():
 process.genJetSeq = cms.Sequence(
     process.ca8GenJetsNoNu
     + process.ca8GenJetsNoNuFiltered
+    + process.ca8GenJetsNoNuBDRSFiltered
     + process.ca8GenJetsNoNuPruned
+    + process.ca8GenJetsNoNuKtSubjets
 )
 process.jetSeq = cms.Sequence(
     (
     process.ca8PFJetsCHS
     + process.ca8PFJetsCHSFiltered
+    + process.ca8PFJetsCHSBDRSFiltered
     + process.ca8PFJetsCHSPruned
+    + process.ca8PFJetsCHSKtSubjets
     )
     * (
     process.NjettinessCA8
