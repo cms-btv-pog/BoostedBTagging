@@ -294,6 +294,9 @@ from PhysicsTools.PatAlgos.tools.jetTools import *
 ## Default AK5 jets (switching done to run only specified b-tag algorithms)
 switchJetCollection(process,
     cms.InputTag("pfNoTau"+postfix),
+    jetIdLabel='ak5',
+    rParam = 0.5,
+    useLegacyFlavour=False,
     doJTA=options.doJTA,
     doBTagging=options.doBTagging,
     btagInfo=bTagInfos,
@@ -307,6 +310,9 @@ switchJetCollection(process,
 ## CA8 jets
 switchJetCollection(process,
     cms.InputTag('ca8PFJetsCHS'),
+    jetIdLabel='ca8',
+    rParam = 0.8,
+    useLegacyFlavour=False,
     doJTA=options.doJTA,
     doBTagging=options.doBTagging,
     btagInfo=bTagInfos,
@@ -321,6 +327,7 @@ addJetCollection(
     process,
     cms.InputTag('ca8PFJetsCHSFiltered'),
     'CA8','FilteredPFCHS',
+    getJetMCFlavour=False,
     doJTA=False,
     doBTagging=False,
     btagInfo=bTagInfos,
@@ -337,6 +344,8 @@ addJetCollection(
     process,
     cms.InputTag('ca8PFJetsCHSFiltered','SubJets'),
     'CA8', 'FilteredSubjetsPFCHS',
+    rParam = 0.8,
+    useLegacyFlavour=False,
     doJTA=options.doJTA,
     doBTagging=options.doBTagging,
     btagInfo=bTagInfos,
@@ -353,6 +362,7 @@ addJetCollection(
     process,
     cms.InputTag('ca8PFJetsCHSPruned'),
     'CA8','PrunedPFCHS',
+    getJetMCFlavour=False,
     doJTA=False,
     doBTagging=False,
     btagInfo=bTagInfos,
@@ -369,6 +379,8 @@ addJetCollection(
     process,
     cms.InputTag('ca8PFJetsCHSPruned','SubJets'),
     'CA8', 'PrunedSubjetsPFCHS',
+    rParam = 0.8,
+    useLegacyFlavour=False,
     doJTA=options.doJTA,
     doBTagging=options.doBTagging,
     btagInfo=bTagInfos,
@@ -415,37 +427,19 @@ process.ca8PFJetsCHSFilteredMass = ca8PFJetsCHSPrunedLinks.clone(
 process.patJets.userData.userFloats.src += ['ca8PFJetsCHSPrunedMass','ca8PFJetsCHSFilteredMass']
 
 #-------------------------------------
-## New jet flavor still requires some cfg-level adjustments until it is better integrated into PAT
-## Adjust the jet flavor for CA8 jets
-process.patJetPartonAssociation = process.patJetPartonAssociation.clone(
-    jets = cms.InputTag("ca8PFJetsCHS"),
-    rParam = cms.double(0.8),
-    jetAlgorithm = cms.string('CambridgeAachen'),
-)
+## New jet flavor still requires some cfg-level adjustments for subjets until it is better integrated into PAT
 ## Adjust the jet flavor for CA8 filtered subjets
-process.patJetPartonAssociationCA8FilteredSubjetsPFCHS = process.patJetPartonAssociationCA8FilteredSubjetsPFCHS.clone(
-    jets = cms.InputTag("ca8PFJetsCHS"),
+process.patJetFlavourAssociationCA8FilteredSubjetsPFCHS = process.patJetFlavourAssociation.clone(
     groomedJets = cms.InputTag("ca8PFJetsCHSFiltered"),
-    subjets = cms.InputTag("ca8PFJetsCHSFiltered", "SubJets"),
-    rParam = cms.double(0.8),
-    jetAlgorithm = cms.string('CambridgeAachen'),
+    subjets = cms.InputTag("ca8PFJetsCHSFiltered", "SubJets")
 )
-process.patJetsCA8FilteredSubjetsPFCHS.JetPartonMapSource = cms.InputTag("patJetPartonAssociationCA8FilteredSubjetsPFCHS","SubJets")
-## Remove the jet flavor for CA8 filtered jets
-process.patJetsCA8FilteredPFCHS.getJetMCFlavour = cms.bool(False)
-process.patDefaultSequence.remove(process.patJetPartonAssociationCA8FilteredPFCHS)
+process.patJetsCA8FilteredSubjetsPFCHS.JetFlavourInfoSource = cms.InputTag("patJetFlavourAssociationCA8FilteredSubjetsPFCHS","SubJets")
 ## Adjust the jet flavor for CA8 pruned subjets
-process.patJetPartonAssociationCA8PrunedSubjetsPFCHS = process.patJetPartonAssociationCA8PrunedSubjetsPFCHS.clone(
-    jets = cms.InputTag("ca8PFJetsCHS"),
+process.patJetFlavourAssociationCA8PrunedSubjetsPFCHS = process.patJetFlavourAssociation.clone(
     groomedJets = cms.InputTag("ca8PFJetsCHSPruned"),
-    subjets = cms.InputTag("ca8PFJetsCHSPruned", "SubJets"),
-    rParam = cms.double(0.8),
-    jetAlgorithm = cms.string('CambridgeAachen'),
+    subjets = cms.InputTag("ca8PFJetsCHSPruned", "SubJets")
 )
-process.patJetsCA8PrunedSubjetsPFCHS.JetPartonMapSource = cms.InputTag("patJetPartonAssociationCA8PrunedSubjetsPFCHS","SubJets")
-## Remove the jet flavor for CA8 pruned jets
-process.patJetsCA8PrunedPFCHS.getJetMCFlavour = cms.bool(False)
-process.patDefaultSequence.remove(process.patJetPartonAssociationCA8PrunedPFCHS)
+process.patJetsCA8PrunedSubjetsPFCHS.JetFlavourInfoSource = cms.InputTag("patJetFlavourAssociationCA8PrunedSubjetsPFCHS","SubJets")
 
 #-------------------------------------
 ## Establish references between PATified fat jets and subjets using the BoostedJetMerger
