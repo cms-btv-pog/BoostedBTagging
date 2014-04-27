@@ -502,6 +502,12 @@ if not options.runOnData:
     process.jetSeq = cms.Sequence( process.genParticlesForJetsNoNu * process.genJetSeq + process.jetSeq )
 
 #-------------------------------------
+## Adapt primary vertex collection
+from PhysicsTools.PatAlgos.tools.pfTools import *
+adaptPVs(process, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'), postfix='', sequence='jetSeq')
+adaptPVs(process, pvCollection=cms.InputTag('goodOfflinePrimaryVertices'), postfix='', sequence='patDefaultSequence')
+
+#-------------------------------------
 ## Path definition
 process.p = cms.Path(
     process.primaryVertexFilter
