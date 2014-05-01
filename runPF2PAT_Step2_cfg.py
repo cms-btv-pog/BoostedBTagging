@@ -83,13 +83,14 @@ if options.runOnData:
     inputJetCorrLabelAK7[1].append('L2L3Residual')
 
 ## b tagging
-bTagInfos = ['impactParameterTagInfos','secondaryVertexTagInfos']
-             #,'inclusiveSecondaryVertexFinderTagInfos','inclusiveSecondaryVertexFinderFilteredTagInfos','softMuonTagInfos','softElectronTagInfos']
-bTagDiscriminators = ['jetProbabilityBJetTags','combinedSecondaryVertexBJetTags']
+bTagInfos = ['impactParameterTagInfos','secondaryVertexTagInfos','inclusiveSecondaryVertexFinderTagInfos']
+             #,'inclusiveSecondaryVertexFinderFilteredTagInfos','softMuonTagInfos','secondaryVertexNegativeTagInfos']
+bTagDiscriminators = ['jetProbabilityBJetTags','combinedSecondaryVertexBJetTags'
                       #,'trackCountingHighPurBJetTags','trackCountingHighEffBJetTags','jetBProbabilityBJetTags'
                       #,'simpleSecondaryVertexHighPurBJetTags','simpleSecondaryVertexHighEffBJetTags'
-                      #,'simpleInclusiveSecondaryVertexHighEffBJetTags','simpleInclusiveSecondaryVertexHighPurBJetTags',
-                      #,'combinedInclusiveSecondaryVertexBJetTags','doubleSecondaryVertexHighEffBJetTags']
+                      ,'combinedInclusiveSecondaryVertexBJetTags']
+                      #,'simpleInclusiveSecondaryVertexHighEffBJetTags','simpleInclusiveSecondaryVertexHighPurBJetTags'
+                      #,'doubleSecondaryVertexHighEffBJetTags']
 
 import FWCore.ParameterSet.Config as cms
 
@@ -385,6 +386,26 @@ process.ca8PFJetsCHSFilteredMass = ca8PFJetsCHSPrunedLinks.clone(
 )
 
 process.patJets.userData.userFloats.src += ['ca8PFJetsCHSPrunedMass','ca8PFJetsCHSFilteredMass']
+
+#-------------------------------------
+## Enable clustering-based jet-SV association for IVF vertices and AK5 jets
+#process.inclusiveSecondaryVertexFinderTagInfosAODPFlow = process.inclusiveSecondaryVertexFinderTagInfosAODPFlow.clone(
+    #useSVClustering = cms.bool(True),
+    ##useSVMomentum   = cms.bool(True), # otherwise using SV flight direction
+    #jetAlgorithm    = cms.string("AntiKt"),
+    #rParam          = cms.double(0.5),
+    #ghostRescaling  = cms.double(1e-18)
+#)
+## Enable clustering-based jet-SV association for IVF vertices and pruned subjets of CA8 jets
+process.inclusiveSecondaryVertexFinderTagInfosCA8PrunedSubjetsPFCHS = process.inclusiveSecondaryVertexFinderTagInfosCA8PrunedSubjetsPFCHS.clone(
+    useSVClustering = cms.bool(True),
+    #useSVMomentum   = cms.bool(True), # otherwise using SV flight direction
+    jetAlgorithm    = cms.string("CambridgeAachen"),
+    rParam          = cms.double(0.8),
+    ghostRescaling  = cms.double(1e-18),
+    fatJets         = cms.InputTag("ca8PFJetsCHS"),
+    groomedFatJets   = cms.InputTag("ca8PFJetsCHSPruned")
+)
 
 #-------------------------------------
 ## New jet flavor still requires some cfg-level adjustments for subjets until it is better integrated into PAT
