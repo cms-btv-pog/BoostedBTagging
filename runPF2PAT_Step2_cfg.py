@@ -238,7 +238,7 @@ process.ca8PFJetsCHSPruned = ak5PFJetsPruned.clone(
 ## CA8 jets with Kt subjets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
 ## Kt subjets produced using Kt-based pruning with very loose pruning cuts (pruning is effectively disabled)
 from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
-process.ca8GenJetsNoNuKtSubjets = ca4GenJets.clone(
+process.ca8GenJetsNoNuKtPruned = ca4GenJets.clone(
     SubJetParameters.clone(
         zcut = cms.double(0.),
         rcut_factor = cms.double(9999.)
@@ -251,7 +251,7 @@ process.ca8GenJetsNoNuKtSubjets = ca4GenJets.clone(
     jetCollInstanceName=cms.string("SubJets")
 )
 from RecoJets.JetProducers.ak5PFJetsPruned_cfi import ak5PFJetsPruned
-process.ca8PFJetsCHSKtSubjets = ak5PFJetsPruned.clone(
+process.ca8PFJetsCHSKtPruned = ak5PFJetsPruned.clone(
     jetAlgorithm = cms.string("CambridgeAachen"),
     rParam = cms.double(0.8),
     src = process.ca8PFJetsCHS.src,
@@ -356,7 +356,6 @@ addJetCollection(
 
 #-------------------------------------
 ## N-subjettiness
-
 from RecoJets.JetProducers.nJettinessAdder_cfi import Njettiness
 
 process.NjettinessCA8 = Njettiness.clone(
@@ -368,7 +367,6 @@ process.patJets.userData.userFloats.src += ['NjettinessCA8:tau1','NjettinessCA8:
 
 #-------------------------------------
 ## Grooming ValueMaps
-
 from RecoJets.JetProducers.ca8PFJetsCHS_groomingValueMaps_cfi import ca8PFJetsCHSPrunedLinks
 
 process.ca8PFJetsCHSPrunedMass = ca8PFJetsCHSPrunedLinks.clone(
@@ -502,7 +500,7 @@ process.genJetSeq = cms.Sequence(
     + process.ca8GenJetsNoNuFiltered
     + process.ca8GenJetsNoNuBDRSFiltered
     + process.ca8GenJetsNoNuPruned
-    + process.ca8GenJetsNoNuKtSubjets
+    + process.ca8GenJetsNoNuKtPruned
 )
 process.jetSeq = cms.Sequence(
     (
@@ -510,7 +508,7 @@ process.jetSeq = cms.Sequence(
     + process.ca8PFJetsCHSFiltered
     + process.ca8PFJetsCHSBDRSFiltered
     + process.ca8PFJetsCHSPruned
-    + process.ca8PFJetsCHSKtSubjets
+    + process.ca8PFJetsCHSKtPruned
     )
     * (
     process.NjettinessCA8
