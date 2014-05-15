@@ -94,7 +94,7 @@ bTagDiscriminators = ['jetProbabilityBJetTags','combinedSecondaryVertexBJetTags'
 
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("PAT")
+process = cms.Process("USER")
 
 ## MessageLogger
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -264,6 +264,16 @@ process.ca8PFJetsCHSKtPruned = ak5PFJetsPruned.clone(
     zcut = cms.double(0.),
     rcut_factor = cms.double(9999.)
 )
+## CA8 trimmed jets (Reco only)
+from RecoJets.JetProducers.ak5PFJetsTrimmed_cfi import ak5PFJetsTrimmed
+process.ca8PFJetsCHSTrimmed = ak5PFJetsTrimmed.clone(
+    jetAlgorithm = cms.string("CambridgeAachen"),
+    rParam = cms.double(0.8),
+    src = process.ca8PFJetsCHS.src,
+    srcPVs = process.ca8PFJetsCHS.srcPVs,
+    doAreaFastjet = process.ca8PFJetsCHS.doAreaFastjet,
+    jetPtMin = cms.double(20.)
+)
 
 #-------------------------------------
 ## PATify the above jets
@@ -383,7 +393,14 @@ process.ca8PFJetsCHSFilteredMass = ca8PFJetsCHSPrunedLinks.clone(
     value = cms.string('mass')
 )
 
-process.patJets.userData.userFloats.src += ['ca8PFJetsCHSPrunedMass','ca8PFJetsCHSFilteredMass']
+process.ca8PFJetsCHSTrimmedMass = ca8PFJetsCHSPrunedLinks.clone(
+    src = cms.InputTag("ca8PFJetsCHS"),
+    matched = cms.InputTag("ca8PFJetsCHSTrimmed"),
+    distMax = cms.double(0.8),
+    value = cms.string('mass')
+)
+
+process.patJets.userData.userFloats.src += ['ca8PFJetsCHSPrunedMass','ca8PFJetsCHSFilteredMass','ca8PFJetsCHSTrimmedMass']
 
 #-------------------------------------
 ## Enable clustering-based jet-SV association for IVF vertices and AK5 jets
@@ -509,11 +526,13 @@ process.jetSeq = cms.Sequence(
     + process.ca8PFJetsCHSBDRSFiltered
     + process.ca8PFJetsCHSPruned
     + process.ca8PFJetsCHSKtPruned
+    + process.ca8PFJetsCHSTrimmed
     )
     * (
     process.NjettinessCA8
     + process.ca8PFJetsCHSFilteredMass
     + process.ca8PFJetsCHSPrunedMass
+    + process.ca8PFJetsCHSTrimmedMass
     )
 )
 
