@@ -188,7 +188,6 @@ process.ca8PFJetsCHS = ca4PFJets.clone(
     doAreaFastjet = getattr(process,"pfJets"+postfix).doAreaFastjet,
     jetPtMin = cms.double(20.)
 )
-
 ## CA8 filtered jets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
 from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
 process.ca8GenJetsNoNuFiltered = ca4GenJets.clone(
@@ -211,12 +210,47 @@ process.ca8PFJetsCHSFiltered = ak5PFJetsFiltered.clone(
     jetCollInstanceName=cms.string("SubJets"),
     jetPtMin = cms.double(20.)
 )
-## CA8 BDRS filtered jets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
+## CA8 MassDrop-BDRS filtered jets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
 ## Compared to the above filtered jets, here dynamic filtering radius is used (as in arXiv:0802.2470)
 from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
-process.ca8GenJetsNoNuBDRSFiltered = ca4GenJets.clone(
+process.ca8GenJetsNoNuMDBDRSFiltered = ca4GenJets.clone(
     rParam = cms.double(0.8),
     src = cms.InputTag("genParticlesForJetsNoNu"),
+    useMassDropTagger = cms.bool(True),
+    muCut = cms.double(0.667),
+    yCut = cms.double(0.08),
+    useFiltering = cms.bool(True),
+    useDynamicFiltering = cms.bool(True),
+    nFilt = cms.int32(3),
+    rFilt = cms.double(0.3),
+    rFiltFactor = cms.double(0.5),
+    writeCompound = cms.bool(True),
+    jetCollInstanceName=cms.string("SubJets")
+)
+from RecoJets.JetProducers.ak5PFJetsFiltered_cfi import ak5PFJetsMassDropFiltered
+process.ca8PFJetsCHSMDBDRSFiltered = ak5PFJetsMassDropFiltered.clone(
+    jetAlgorithm = cms.string("CambridgeAachen"),
+    rParam = cms.double(0.8),
+    src = getattr(process,"pfJets"+postfix).src,
+    srcPVs = getattr(process,"pfJets"+postfix).srcPVs,
+    doAreaFastjet = getattr(process,"pfJets"+postfix).doAreaFastjet,
+    writeCompound = cms.bool(True),
+    jetCollInstanceName=cms.string("SubJets"),
+    jetPtMin = cms.double(20.),
+    useDynamicFiltering = cms.bool(True),
+    rFiltFactor = cms.double(0.5)
+)
+## CA8 Kt-BDRS filtered jets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
+## Compared to the above filtered jets, here dynamic filtering radius is used (as in arXiv:0802.2470)
+## However, here the mass drop is replaced by finding two Kt subjets which then set the size of the filtering radius
+from RecoJets.JetProducers.ca4GenJets_cfi import ca4GenJets
+process.ca8GenJetsNoNuKtBDRSFiltered = ca4GenJets.clone(
+    rParam = cms.double(0.8),
+    src = cms.InputTag("genParticlesForJetsNoNu"),
+    usePruning = cms.bool(True),
+    useKtPruning = cms.bool(True),
+    zcut = cms.double(0.),
+    rcut_factor = cms.double(9999.),
     useFiltering = cms.bool(True),
     useDynamicFiltering = cms.bool(True),
     nFilt = cms.int32(3),
@@ -226,7 +260,7 @@ process.ca8GenJetsNoNuBDRSFiltered = ca4GenJets.clone(
     jetCollInstanceName=cms.string("SubJets")
 )
 from RecoJets.JetProducers.ak5PFJetsFiltered_cfi import ak5PFJetsFiltered
-process.ca8PFJetsCHSBDRSFiltered = ak5PFJetsFiltered.clone(
+process.ca8PFJetsCHSKtBDRSFiltered = ak5PFJetsFiltered.clone(
     jetAlgorithm = cms.string("CambridgeAachen"),
     rParam = cms.double(0.8),
     src = getattr(process,"pfJets"+postfix).src,
@@ -235,6 +269,10 @@ process.ca8PFJetsCHSBDRSFiltered = ak5PFJetsFiltered.clone(
     writeCompound = cms.bool(True),
     jetCollInstanceName=cms.string("SubJets"),
     jetPtMin = cms.double(20.),
+    usePruning = cms.bool(True),
+    useKtPruning = cms.bool(True),
+    zcut = cms.double(0.),
+    rcut_factor = cms.double(9999.),
     useDynamicFiltering = cms.bool(True),
     rFiltFactor = cms.double(0.5)
 )
@@ -261,7 +299,6 @@ process.ca8PFJetsCHSPruned = ak5PFJetsPruned.clone(
 )
 ## CA8 jets with Kt subjets (Gen and Reco) (each module produces two jet collections, fat jets and subjets)
 ## Kt subjets produced using Kt-based pruning with very loose pruning cuts (pruning is effectively disabled)
-from RecoJets.JetProducers.SubJetParameters_cfi import SubJetParameters
 process.ca8GenJetsNoNuKtPruned = ca4GenJets.clone(
     SubJetParameters.clone(
         zcut = cms.double(0.),
@@ -368,6 +405,76 @@ addJetCollection(
     doJetID=False,
     genJetCollection=cms.InputTag('ca8GenJetsNoNuFiltered','SubJets')
 )
+## MassDrop-BDRS filtered CA8 jets
+addJetCollection(
+    process,
+    cms.InputTag('ca8PFJetsCHSMDBDRSFiltered'),
+    'CA8','MDBDRSFilteredPFCHS',
+    getJetMCFlavour=False,
+    doJTA=False,
+    doBTagging=False,
+    btagInfo=bTagInfos,
+    btagdiscriminators=bTagDiscriminators,
+    jetCorrLabel=inputJetCorrLabelAK7,
+    doType1MET=False,
+    doL1Cleaning=False,
+    doL1Counters=False,
+    doJetID=False,
+    genJetCollection=cms.InputTag("ca8GenJetsNoNu")
+)
+## MassDrop-BDRS filtered subjets of CA8 jets
+addJetCollection(
+    process,
+    cms.InputTag('ca8PFJetsCHSMDBDRSFiltered','SubJets'),
+    'CA8', 'MDBDRSFilteredSubjetsPFCHS',
+    rParam = 0.8,
+    useLegacyFlavour=False,
+    doJTA=options.doJTA,
+    doBTagging=options.doBTagging,
+    btagInfo=bTagInfos,
+    btagdiscriminators=bTagDiscriminators,
+    jetCorrLabel=inputJetCorrLabelAK5,
+    doType1MET=False,
+    doL1Cleaning=False,
+    doL1Counters=False,
+    doJetID=False,
+    genJetCollection=cms.InputTag('ca8GenJetsNoNuMDBDRSFiltered','SubJets')
+)
+## Kt-BDRS filtered CA8 jets
+addJetCollection(
+    process,
+    cms.InputTag('ca8PFJetsCHSKtBDRSFiltered'),
+    'CA8','KtBDRSFilteredPFCHS',
+    getJetMCFlavour=False,
+    doJTA=False,
+    doBTagging=False,
+    btagInfo=bTagInfos,
+    btagdiscriminators=bTagDiscriminators,
+    jetCorrLabel=inputJetCorrLabelAK7,
+    doType1MET=False,
+    doL1Cleaning=False,
+    doL1Counters=False,
+    doJetID=False,
+    genJetCollection=cms.InputTag("ca8GenJetsNoNu")
+)
+## Kt-BDRS filtered subjets of CA8 jets
+addJetCollection(
+    process,
+    cms.InputTag('ca8PFJetsCHSKtBDRSFiltered','SubJets'),
+    'CA8', 'KtBDRSFilteredSubjetsPFCHS',
+    rParam = 0.8,
+    useLegacyFlavour=False,
+    doJTA=options.doJTA,
+    doBTagging=options.doBTagging,
+    btagInfo=bTagInfos,
+    btagdiscriminators=bTagDiscriminators,
+    jetCorrLabel=inputJetCorrLabelAK5,
+    doType1MET=False,
+    doL1Cleaning=False,
+    doL1Counters=False,
+    doJetID=False,
+    genJetCollection=cms.InputTag('ca8GenJetsNoNuKtBDRSFiltered','SubJets')
+)
 ## Pruned CA8 jets
 addJetCollection(
     process,
@@ -402,6 +509,41 @@ addJetCollection(
     doL1Counters=False,
     doJetID=False,
     genJetCollection=cms.InputTag('ca8GenJetsNoNuPruned','SubJets')
+)
+## Kt pruned CA8 jets
+addJetCollection(
+    process,
+    cms.InputTag('ca8PFJetsCHSKtPruned'),
+    'CA8','KtPrunedPFCHS',
+    getJetMCFlavour=False,
+    doJTA=False,
+    doBTagging=False,
+    btagInfo=bTagInfos,
+    btagdiscriminators=bTagDiscriminators,
+    jetCorrLabel=inputJetCorrLabelAK7,
+    doType1MET=False,
+    doL1Cleaning=False,
+    doL1Counters=False,
+    doJetID=False,
+    genJetCollection=cms.InputTag("ca8GenJetsNoNu")
+)
+## Kt subjets of CA8 jets
+addJetCollection(
+    process,
+    cms.InputTag('ca8PFJetsCHSKtPruned','SubJets'),
+    'CA8', 'KtSubjetsPFCHS',
+    rParam = 0.8,
+    useLegacyFlavour=False,
+    doJTA=options.doJTA,
+    doBTagging=options.doBTagging,
+    btagInfo=bTagInfos,
+    btagdiscriminators=bTagDiscriminators,
+    jetCorrLabel=inputJetCorrLabelAK5,
+    doType1MET=False,
+    doL1Cleaning=False,
+    doL1Counters=False,
+    doJetID=False,
+    genJetCollection=cms.InputTag('ca8GenJetsNoNuKtPruned','SubJets')
 )
 
 #-------------------------------------
@@ -470,12 +612,30 @@ process.patJetFlavourAssociationCA8FilteredSubjetsPFCHS = process.patJetFlavourA
     subjets = cms.InputTag("ca8PFJetsCHSFiltered", "SubJets")
 )
 process.patJetsCA8FilteredSubjetsPFCHS.JetFlavourInfoSource = cms.InputTag("patJetFlavourAssociationCA8FilteredSubjetsPFCHS","SubJets")
+## Adjust the jet flavor for CA8 MassDrop-BDRS filtered subjets
+process.patJetFlavourAssociationCA8MDBDRSFilteredSubjetsPFCHS = process.patJetFlavourAssociation.clone(
+    groomedJets = cms.InputTag("ca8PFJetsCHSMDBDRSFiltered"),
+    subjets = cms.InputTag("ca8PFJetsCHSMDBDRSFiltered", "SubJets")
+)
+process.patJetsCA8MDBDRSFilteredSubjetsPFCHS.JetFlavourInfoSource = cms.InputTag("patJetFlavourAssociationCA8MDBDRSFilteredSubjetsPFCHS","SubJets")
+## Adjust the jet flavor for CA8 Kt-BDRS filtered subjets
+process.patJetFlavourAssociationCA8KtBDRSFilteredSubjetsPFCHS = process.patJetFlavourAssociation.clone(
+    groomedJets = cms.InputTag("ca8PFJetsCHSKtBDRSFiltered"),
+    subjets = cms.InputTag("ca8PFJetsCHSKtBDRSFiltered", "SubJets")
+)
+process.patJetsCA8KtBDRSFilteredSubjetsPFCHS.JetFlavourInfoSource = cms.InputTag("patJetFlavourAssociationCA8KtBDRSFilteredSubjetsPFCHS","SubJets")
 ## Adjust the jet flavor for CA8 pruned subjets
 process.patJetFlavourAssociationCA8PrunedSubjetsPFCHS = process.patJetFlavourAssociation.clone(
     groomedJets = cms.InputTag("ca8PFJetsCHSPruned"),
     subjets = cms.InputTag("ca8PFJetsCHSPruned", "SubJets")
 )
 process.patJetsCA8PrunedSubjetsPFCHS.JetFlavourInfoSource = cms.InputTag("patJetFlavourAssociationCA8PrunedSubjetsPFCHS","SubJets")
+## Adjust the jet flavor for CA8 Kt subjets
+process.patJetFlavourAssociationCA8KtSubjetsPFCHS = process.patJetFlavourAssociation.clone(
+    groomedJets = cms.InputTag("ca8PFJetsCHSKtPruned"),
+    subjets = cms.InputTag("ca8PFJetsCHSKtPruned", "SubJets")
+)
+process.patJetsCA8KtSubjetsPFCHS.JetFlavourInfoSource = cms.InputTag("patJetFlavourAssociationCA8KtSubjetsPFCHS","SubJets")
 
 #-------------------------------------
 ## Establish references between PATified fat jets and subjets using the BoostedJetMerger
@@ -484,15 +644,33 @@ process.selectedPatJetsCA8FilteredPFCHSPacked = cms.EDProducer("BoostedJetMerger
     subjetSrc=cms.InputTag("selectedPatJetsCA8FilteredSubjetsPFCHS")
 )
 
+process.selectedPatJetsCA8MDBDRSFilteredPFCHSPacked = cms.EDProducer("BoostedJetMerger",
+    jetSrc=cms.InputTag("selectedPatJetsCA8MDBDRSFilteredPFCHS"),
+    subjetSrc=cms.InputTag("selectedPatJetsCA8MDBDRSFilteredSubjetsPFCHS")
+)
+
+process.selectedPatJetsCA8KtBDRSFilteredPFCHSPacked = cms.EDProducer("BoostedJetMerger",
+    jetSrc=cms.InputTag("selectedPatJetsCA8KtBDRSFilteredPFCHS"),
+    subjetSrc=cms.InputTag("selectedPatJetsCA8KtBDRSFilteredSubjetsPFCHS")
+)
+
 process.selectedPatJetsCA8PrunedPFCHSPacked = cms.EDProducer("BoostedJetMerger",
     jetSrc=cms.InputTag("selectedPatJetsCA8PrunedPFCHS"),
     subjetSrc=cms.InputTag("selectedPatJetsCA8PrunedSubjetsPFCHS")
 )
 
+process.selectedPatJetsCA8KtPrunedPFCHSPacked = cms.EDProducer("BoostedJetMerger",
+    jetSrc=cms.InputTag("selectedPatJetsCA8KtPrunedPFCHS"),
+    subjetSrc=cms.InputTag("selectedPatJetsCA8KtSubjetsPFCHS")
+)
+
 ## Define BoostedJetMerger sequence
 process.jetMergerSeq = cms.Sequence(
     process.selectedPatJetsCA8FilteredPFCHSPacked
+    + process.selectedPatJetsCA8MDBDRSFilteredPFCHSPacked
+    + process.selectedPatJetsCA8KtBDRSFilteredPFCHSPacked
     + process.selectedPatJetsCA8PrunedPFCHSPacked
+    + process.selectedPatJetsCA8KtPrunedPFCHSPacked
 )
 
 #-------------------------------------
@@ -560,7 +738,8 @@ for m in getattr(process,"patDefaultSequence"+postfix).moduleNames():
 process.genJetSeq = cms.Sequence(
     process.ca8GenJetsNoNu
     + process.ca8GenJetsNoNuFiltered
-    + process.ca8GenJetsNoNuBDRSFiltered
+    + process.ca8GenJetsNoNuMDBDRSFiltered
+    + process.ca8GenJetsNoNuKtBDRSFiltered
     + process.ca8GenJetsNoNuPruned
     + process.ca8GenJetsNoNuKtPruned
 )
@@ -568,7 +747,8 @@ process.jetSeq = cms.Sequence(
     (
     process.ca8PFJetsCHS
     + process.ca8PFJetsCHSFiltered
-    + process.ca8PFJetsCHSBDRSFiltered
+    + process.ca8PFJetsCHSMDBDRSFiltered
+    + process.ca8PFJetsCHSKtBDRSFiltered
     + process.ca8PFJetsCHSPruned
     + process.ca8PFJetsCHSKtPruned
     + process.ca8PFJetsCHSTrimmed
