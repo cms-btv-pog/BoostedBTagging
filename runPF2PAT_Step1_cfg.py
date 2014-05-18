@@ -201,11 +201,12 @@ patEventContentNoCleaning.append('keep *_offlineBeamSpot_*_*')
 patEventContentNoCleaning.append('keep *_generalTracks_*_*')
 patEventContentNoCleaning.append('keep *_offlinePrimaryVertices_*_*')
 ## For soft lepton taggers
-#patEventContentNoCleaning.append('keep recoMuons_muons_*_*')
-#patEventContentNoCleaning.append('keep recoTracks_globalMuons_*_*')
-#patEventContentNoCleaning.append('keep *_gsfElectrons_*_*')
-#patEventContentNoCleaning.append('keep *_gsfElectronCores_*_*')
-#patEventContentNoCleaning.append('keep *_electronGsfTracks_*_*')
+patEventContentNoCleaning.append('keep recoMuons_muons_*_*')
+patEventContentNoCleaning.append('keep recoTracks_globalMuons_*_*')
+patEventContentNoCleaning.append('keep recoTracks_standAloneMuons_*_*')
+patEventContentNoCleaning.append('keep *_gsfElectrons_*_*')
+patEventContentNoCleaning.append('keep *_gsfElectronCores_*_*')
+patEventContentNoCleaning.append('keep *_electronGsfTracks_*_*')
 
 process.out.outputCommands = cms.untracked.vstring('drop *', *patEventContentNoCleaning)
 
